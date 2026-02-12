@@ -12,8 +12,6 @@ export const createTaskHandler = async (request: FastifyRequest, reply: FastifyR
     } else {
         reply.code(400).send(response);
     }
-    const userId = 1; // TODO: Replace with actual user from auth
-    const response = await taskService.createTask(fastify, taskData, userId);
     reply.code(response.success ? 201 : 400).send(response);
 };
 

@@ -13,8 +13,7 @@ import {
     updateTaskSchema,
     deleteTaskSchema,
 } from './schemas.js';
-import { createTaskHandler } from './handlers.js';
-import { createTaskSchema } from './schemas.js';
+
 
 export default async function (
     fastify: FastifyInstance,

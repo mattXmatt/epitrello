@@ -31,10 +31,6 @@ export interface createTaskDTO {
     priority: Priority,
     comment?: any,
     stepsChecklist?: any
-    boardColumnId: number;
-    taskName: string;
-    description?: string;
-    priority?: 'P0' | 'P1' | 'P2' | 'None';
 }
 
 export interface updateTaskDTO {
@@ -56,5 +52,4 @@ export interface taskResponseDTO {
     success: boolean,
     message?: string,
     result?: taskDTO | taskDTO[]
-    result?: TaskDTO | TaskDTO[]
 }
