@@ -6,15 +6,18 @@ export const taskService = {
         try {
             await client.query('BEGIN');
 
-            const maxIndexRes = await client.query('SELECT MAX("taskIndex") as max_index FROM "Task" WHERE "boardColumnId" = $1', [data.boardColumnId]);
+            const maxIndexRes = await client.query(
+                'SELECT MAX("taskIndex") as max_index FROM "Task" WHERE "boardColumnId" = $1', 
+                [data.boardColumnId]
+            );
             const nextIndex = (maxIndexRes.rows[0].max_index || 0) + 1;
 
-            const createdBy = 1; // Placeholder for user ID
+            const createdBy = 1;
             const startingDate = new Date();
 
             const newTask = await client.query(
                 'INSERT INTO "Task" ("taskName", "taskIndex", "boardColumnId", "description", "startingDate", "createdBy") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-                [data.taskName, nextIndex, data.boardColumnId, data.description, startingDate, createdBy]
+                [data.taskName, nextIndex, data.boardColumnId, data.description || '', startingDate, createdBy]
             );
 
             await client.query('COMMIT');
@@ -30,7 +33,7 @@ export const taskService = {
     async getTasks(fastify: any, boardColumnId: number): Promise<taskResponseDTO> {
         try {
             const tasks = await fastify.pg.query(
-                'SELECT * FROM "Task" WHERE "boardColumnId" = $1',
+                'SELECT * FROM "Task" WHERE "boardColumnId" = $1 ORDER BY "taskIndex"',
                 [boardColumnId]
             );
             return { success: true, result: tasks.rows };

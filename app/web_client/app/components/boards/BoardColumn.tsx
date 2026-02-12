@@ -21,8 +21,8 @@ interface BoardColumnProps {
 const BoardColumn: React.FC<BoardColumnProps> = ({ column }) => {
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [showEventModal, setShowEventModal] = useState(false);
-    const [tasks, setTasks] = useState(column.tasks || []);
-    const [events, setEvents] = useState(column.events || []);
+    const [tasks, setTasks] = useState<Task[]>(column.tasks || []);
+    const [events, setEvents] = useState<Event[]>(column.events || []);
 
     const handleAddTask = async (task: Omit<Task, 'id'>) => {
         try {

@@ -46,7 +46,7 @@ export const createTaskSchema: FastifySchema = {
     tags: ['tasks'],
     body: {
         type: 'object',
-        required: ['taskName', 'taskIndex', 'boardColumnId', 'startingDate', 'createdBy', 'priority'],
+        required: ['taskName', 'boardColumnId'],
         properties: {
             taskName: { type: 'string' },
             taskIndex: { type: 'number' },

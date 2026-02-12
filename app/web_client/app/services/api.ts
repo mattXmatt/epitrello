@@ -31,28 +31,20 @@ const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
 export const register = async (userData: any): Promise<any> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
     });
-    if (!response.ok) {
-        throw new Error('Registration failed');
-    }
+    if (!response.ok) throw new Error('Registration failed');
     return response.json();
 };
 
 export const login = async (credentials: any): Promise<any> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
     });
-    if (!response.ok) {
-        throw new Error('Login failed');
-    }
+    if (!response.ok) throw new Error('Login failed');
     return response.json();
 };
 
@@ -60,17 +52,13 @@ export const logout = async (): Promise<any> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
     });
-    if (!response.ok) {
-        throw new Error('Logout failed');
-    }
+    if (!response.ok) throw new Error('Logout failed');
     return response.json();
 };
 
 export const getMe = async (): Promise<User> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/auth/me`);
-    if (!response.ok) {
-        throw new Error('Failed to fetch user');
-    }
+    if (!response.ok) throw new Error('Failed to fetch user');
     const data = await response.json();
     return data.result;
 };
@@ -78,32 +66,24 @@ export const getMe = async (): Promise<User> => {
 export const createBoard = async (boardName: string, description: string): Promise<Board> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/board`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ boardName, description }),
     });
-    if (!response.ok) {
-        throw new Error('Failed to create board');
-    }
+    if (!response.ok) throw new Error('Failed to create board');
     const data = await response.json();
     return data.result;
 };
 
 export const getBoards = async (): Promise<Board[]> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/board`);
-    if (!response.ok) {
-        throw new Error('Failed to fetch boards');
-    }
+    if (!response.ok) throw new Error('Failed to fetch boards');
     const data = await response.json();
     return data.result;
 };
 
 export const getBoard = async (boardId: string): Promise<Board> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/board/${boardId}`);
-    if (!response.ok) {
-        throw new Error('Failed to fetch board');
-    }
+    if (!response.ok) throw new Error('Failed to fetch board');
     const data = await response.json();
     return data.result;
 };
@@ -111,41 +91,32 @@ export const getBoard = async (boardId: string): Promise<Board> => {
 export const createColumn = async (boardId: string, columnName: string): Promise<Column> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/boardColumn`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ boardId, columnName }),
     });
-    if (!response.ok) {
-        throw new Error('Failed to create column');
-    }
-    return response.json();
+    if (!response.ok) throw new Error('Failed to create column');
+    const data = await response.json();
+    return data.result;
 };
 
 export const createTask = async (columnId: string, task: Omit<Task, 'id'>): Promise<Task> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/task`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...task, boardColumnId: columnId }),
     });
-    if (!response.ok) {
-        throw new Error('Failed to create task');
-    }
-    return response.json();
+    if (!response.ok) throw new Error('Failed to create task');
+    const data = await response.json();
+    return data.result;
 };
 
 export const createEvent = async (columnId: string, event: Omit<Event, 'id'>): Promise<Event> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/eventMeeting`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...event, boardColumnId: columnId }),
     });
-    if (!response.ok) {
-        throw new Error('Failed to create event');
-    }
-    return response.json();
+    if (!response.ok) throw new Error('Failed to create event');
+    const data = await response.json();
+    return data.result;
 };

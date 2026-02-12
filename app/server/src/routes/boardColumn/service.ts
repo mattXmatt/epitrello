@@ -6,12 +6,15 @@ export const boardColumnService = {
         try {
             await client.query('BEGIN');
 
-            const maxIndexRes = await client.query('SELECT MAX("columnIndex") as max_index FROM "boardColumn" WHERE "boardId" = $1', [data.boardId]);
+            const maxIndexRes = await client.query(
+                'SELECT MAX("columnIndex") as max_index FROM "boardColumn" WHERE "boardId" = $1', 
+                [data.boardId]
+            );
             const nextIndex = (maxIndexRes.rows[0].max_index || 0) + 1;
 
             const newBoardColumn = await client.query(
                 'INSERT INTO "boardColumn" ("columnName", "description", "boardId", "columnIndex") VALUES ($1, $2, $3, $4) RETURNING *',
-                [data.columnName, data.description, data.boardId, nextIndex]
+                [data.columnName, data.description || '', data.boardId, nextIndex]
             );
 
             await client.query('COMMIT');

@@ -1,5 +1,5 @@
 import React from 'react';
-import './task_card.css'; // Using same styling as TaskCard for now
+import './task_card.css';
 
 export interface Event {
     id: string;
@@ -7,6 +7,7 @@ export interface Event {
     description: string;
     startingDate: string;
     endingDate: string;
+    type: 'meeting' | 'event';
 }
 
 const EventCard = ({ event }: { event: Event }) => {

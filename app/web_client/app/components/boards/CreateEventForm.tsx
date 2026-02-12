@@ -12,10 +12,22 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ columnId, onAddEvent,
     const [description, setDescription] = useState('');
     const [startingDate, setStartingDate] = useState('');
     const [endingDate, setEndingDate] = useState('');
+    const [type, setType] = useState<'meeting' | 'event'>('event');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onAddEvent({ eventName, description, startingDate, endingDate });
+        
+        // CORRECTION ICI : Conversion en format ISO complet pour le backend
+        const isoStartingDate = new Date(startingDate).toISOString();
+        const isoEndingDate = new Date(endingDate).toISOString();
+
+        onAddEvent({ 
+            eventName, 
+            description, 
+            startingDate: isoStartingDate, 
+            endingDate: isoEndingDate, 
+            type 
+        });
     };
 
     return (
@@ -27,25 +39,44 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ columnId, onAddEvent,
                 placeholder="Event Name"
                 required
             />
+            
+            <select 
+                value={type} 
+                onChange={(e) => setType(e.target.value as 'meeting' | 'event')}
+                style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+            >
+                <option value="event">Event</option>
+                <option value="meeting">Meeting</option>
+            </select>
+
             <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Event Description"
             />
-            <input
-                type="datetime-local"
-                value={startingDate}
-                onChange={(e) => setStartingDate(e.target.value)}
-                required
-            />
-            <input
-                type="datetime-local"
-                value={endingDate}
-                onChange={(e) => setEndingDate(e.target.value)}
-                required
-            />
+            <div style={{display: 'flex', gap: '10px'}}>
+                <div style={{flex: 1}}>
+                    <label style={{fontSize: '0.8em'}}>Début</label>
+                    <input
+                        type="datetime-local"
+                        value={startingDate}
+                        onChange={(e) => setStartingDate(e.target.value)}
+                        required
+                    />
+                </div>
+                <div style={{flex: 1}}>
+                    <label style={{fontSize: '0.8em'}}>Fin</label>
+                    <input
+                        type="datetime-local"
+                        value={endingDate}
+                        onChange={(e) => setEndingDate(e.target.value)}
+                        required
+                    />
+                </div>
+            </div>
+
             <div className="modal-actions">
-                <button type="submit">Add Event</button>
+                <button type="submit">Add {type === 'meeting' ? 'Meeting' : 'Event'}</button>
                 <button type="button" onClick={onClose}>
                     Cancel
                 </button>

@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import BoardColumn from '@/app/components/boards/BoardColumn';
 import { getBoard, createColumn, Board } from '@/app/services/api';
 import '../../styles/BoardPage.css';
-import '../../styles/FormPage.css'; // For modal styling
+import '../../styles/FormPage.css';
 
 const BoardPage = () => {
     const params = useParams();
@@ -47,13 +47,8 @@ const BoardPage = () => {
         }
     };
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-
-    if (!board) {
-        return <div>Board not found</div>;
-    }
+    if (loading) return <div>Loading...</div>;
+    if (!board) return <div>Board not found</div>;
 
     return (
         <div className="board-page-container">

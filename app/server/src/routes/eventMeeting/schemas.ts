@@ -46,7 +46,7 @@ export const createEventMeetingSchema: FastifySchema = {
     tags: ['event-meetings'],
     body: {
         type: 'object',
-        required: ['eventName', 'eventIndex', 'boardColumnId', 'startingDate', 'createdBy', 'type'],
+        required: ['eventName', 'boardColumnId', 'startingDate', 'type'],
         properties: {
             eventName: { type: 'string' },
             eventIndex: { type: 'number' },

@@ -37,7 +37,7 @@ export const createBoardColumnSchema: FastifySchema = {
     tags: ['board-columns'],
     body: {
         type: 'object',
-        required: ['columnName', 'boardId', 'columnIndex'],
+        required: ['columnName', 'boardId'],
         properties: {
             columnName: { type: 'string' },
             description: { type: 'string' },

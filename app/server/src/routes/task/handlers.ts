@@ -5,6 +5,7 @@ import { createTaskDTO, updateTaskDTO } from './interfaces.js';
 export const createTaskHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const fastify = request.server;
     const taskData = request.body as createTaskDTO;
+    
     const response = await taskService.createTask(fastify, taskData);
 
     if (response.success) {
@@ -12,7 +13,6 @@ export const createTaskHandler = async (request: FastifyRequest, reply: FastifyR
     } else {
         reply.code(400).send(response);
     }
-    reply.code(response.success ? 201 : 400).send(response);
 };
 
 export const getTasksHandler = async (request: FastifyRequest, reply: FastifyReply) => {
