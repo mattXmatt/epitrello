@@ -1,0 +1,31 @@
+.boards-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.dashboard-container {
+    padding: 20px;
+    text-align: center;
+}
+
+.dashboard-links {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.dashboard-link {
+    display: inline-block;
+    padding: 15px 25px;
+    background-color: #D9D9D9;
+    border-radius: 15px;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.dashboard-link:hover {
+    background-color: #c4c4c4;
+}

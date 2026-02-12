@@ -1,0 +1,46 @@
+services:
+  backend:
+    build:
+      context: ./server
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgres://epitrello:password@db:5432/epitrello_db
+      - PORT=3001
+      - HOST=0.0.0.0
+    volumes:
+      - ./psql-db.sql:/usr/src/app/psql-db.sql
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./web_client
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:3001
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: epitrello
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: epitrello_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - /var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

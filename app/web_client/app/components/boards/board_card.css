@@ -1,0 +1,34 @@
+.board-card {
+    background-color: #FFFFFF;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 25px;
+    margin: 15px;
+    width: 320px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    font-family: sans-serif;
+}
+
+.board-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transform: translateY(-4px);
+}
+
+.board-card h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.board-card p {
+    font-size: 1rem;
+    color: #666;
+    line-height: 1.5;
+}
+
+.board-card-link {
+    text-decoration: none;
+    color: inherit;
+}
