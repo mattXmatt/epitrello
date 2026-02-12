@@ -14,12 +14,14 @@ import {
     deleteTaskSchema,
 } from './schemas.js';
 
-
 export default async function (
     fastify: FastifyInstance,
     options: FastifyPluginOptions
 ) {
-    fastify.post('/', { schema: createTaskSchema }, createTaskHandler);
+    fastify.post('/', { 
+        schema: createTaskSchema,
+        onRequest: [fastify.authenticate]
+    }, createTaskHandler);
 
     fastify.get('/', { schema: getTasksSchema }, getTasksHandler);
 

@@ -5,7 +5,9 @@ import { createEventMeetingDTO, updateEventMeetingDTO } from './interfaces.js';
 export const createEventMeetingHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const fastify = request.server;
     const eventMeetingData = request.body as createEventMeetingDTO;
-    const response = await eventMeetingService.createEventMeeting(fastify, eventMeetingData);
+    const user = request.user as { id: number };
+
+    const response = await eventMeetingService.createEventMeeting(fastify, eventMeetingData, user.id);
 
     if (response.success) {
         reply.code(201).send(response);

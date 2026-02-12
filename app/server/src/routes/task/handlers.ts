@@ -6,7 +6,9 @@ export const createTaskHandler = async (request: FastifyRequest, reply: FastifyR
     const fastify = request.server;
     const taskData = request.body as createTaskDTO;
     
-    const response = await taskService.createTask(fastify, taskData);
+    const user = request.user as { id: number };
+
+    const response = await taskService.createTask(fastify, taskData, user.id);
 
     if (response.success) {
         reply.code(201).send(response);
