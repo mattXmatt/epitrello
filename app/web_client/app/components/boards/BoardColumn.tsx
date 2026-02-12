@@ -4,6 +4,8 @@ import TaskCard, { Task } from './TaskCard';
 import EventCard, { Event } from './EventCard';
 import CreateTaskForm from './CreateTaskForm';
 import CreateEventForm from './CreateEventForm';
+import TaskDetailModal from './TaskDetailModal';
+import EventDetailModal from './EventDetailModal';
 import { createTask, createEvent } from '@/app/services/api';
 import './board_column.css';
 
@@ -19,29 +21,43 @@ interface BoardColumnProps {
 }
 
 const BoardColumn: React.FC<BoardColumnProps> = ({ column }) => {
-    const [showTaskModal, setShowTaskModal] = useState(false);
-    const [showEventModal, setShowEventModal] = useState(false);
     const [tasks, setTasks] = useState<Task[]>(column.tasks || []);
     const [events, setEvents] = useState<Event[]>(column.events || []);
+    
+    const [showCreateTask, setShowCreateTask] = useState(false);
+    const [showCreateEvent, setShowCreateEvent] = useState(false);
+
+    const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
     const handleAddTask = async (task: Omit<Task, 'id'>) => {
         try {
             const newTask = await createTask(column.id, task);
-            setTasks(prevTasks => [...prevTasks, newTask]);
-            setShowTaskModal(false);
-        } catch (error) {
-            console.error('Failed to create task', error);
-        }
+            setTasks(prev => [...prev, newTask]);
+            setShowCreateTask(false);
+        } catch (error) { console.error(error); }
     };
 
     const handleAddEvent = async (event: Omit<Event, 'id'>) => {
         try {
             const newEvent = await createEvent(column.id, event);
-            setEvents(prevEvents => [...(prevEvents || []), newEvent]);
-            setShowEventModal(false);
-        } catch (error) {
-            console.error('Failed to create event', error);
-        }
+            setEvents(prev => [...(prev || []), newEvent]);
+            setShowCreateEvent(false);
+        } catch (error) { console.error(error); }
+    };
+
+    const onTaskUpdate = (updated: Task) => {
+        setTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
+    };
+    const onTaskDelete = (id: string) => {
+        setTasks(prev => prev.filter(t => t.id !== id));
+    };
+
+    const onEventUpdate = (updated: Event) => {
+        setEvents(prev => prev.map(e => e.id === updated.id ? updated : e));
+    };
+    const onEventDelete = (id: string) => {
+        setEvents(prev => prev.filter(e => e.id !== id));
     };
 
     return (
@@ -49,41 +65,58 @@ const BoardColumn: React.FC<BoardColumnProps> = ({ column }) => {
             <h2>{column.columnName}</h2>
             <div className="tasks-container">
                 {tasks.map(task => (
-                    <TaskCard key={task.id} task={task} />
+                    <TaskCard 
+                        key={task.id} 
+                        task={task} 
+                        onClick={() => setSelectedTaskId(task.id)}
+                    />
                 ))}
                 {events?.map(event => (
-                    <EventCard key={event.id} event={event} />
+                    <EventCard 
+                        key={event.id} 
+                        event={event} 
+                        onClick={() => setSelectedEventId(event.id)}
+                    />
                 ))}
             </div>
+            
             <div className="column-actions">
-                <button onClick={() => setShowTaskModal(true)} className="add-task-btn">+ Add Task</button>
-                <button onClick={() => setShowEventModal(true)} className="add-event-btn">+ Add Event</button>
+                <button onClick={() => setShowCreateTask(true)} className="add-task-btn">+ Task</button>
+                <button onClick={() => setShowCreateEvent(true)} className="add-event-btn">+ Event</button>
             </div>
 
-            {showTaskModal && (
+            {showCreateTask && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h2>Add New Task</h2>
-                        <CreateTaskForm
-                            columnId={column.id}
-                            onAddTask={handleAddTask}
-                            onClose={() => setShowTaskModal(false)}
-                        />
+                        <h2>Nouvelle Tâche</h2>
+                        <CreateTaskForm columnId={column.id} onAddTask={handleAddTask} onClose={() => setShowCreateTask(false)} />
+                    </div>
+                </div>
+            )}
+            {showCreateEvent && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h2>Nouvel Événement</h2>
+                        <CreateEventForm columnId={column.id} onAddEvent={handleAddEvent} onClose={() => setShowCreateEvent(false)} />
                     </div>
                 </div>
             )}
 
-            {showEventModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h2>Add New Event</h2>
-                        <CreateEventForm
-                            columnId={column.id}
-                            onAddEvent={handleAddEvent}
-                            onClose={() => setShowEventModal(false)}
-                        />
-                    </div>
-                </div>
+            {selectedTaskId && (
+                <TaskDetailModal 
+                    taskId={selectedTaskId} 
+                    onClose={() => setSelectedTaskId(null)}
+                    onUpdate={onTaskUpdate}
+                    onDelete={onTaskDelete}
+                />
+            )}
+            {selectedEventId && (
+                <EventDetailModal 
+                    eventId={selectedEventId} 
+                    onClose={() => setSelectedEventId(null)}
+                    onUpdate={onEventUpdate}
+                    onDelete={onEventDelete}
+                />
             )}
         </div>
     );

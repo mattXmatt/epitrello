@@ -1,5 +1,4 @@
 import React from 'react';
-import './task_card.css';
 
 export interface Event {
     id: string;
@@ -10,16 +9,21 @@ export interface Event {
     type: 'meeting' | 'event';
 }
 
-const EventCard = ({ event }: { event: Event }) => {
+interface EventCardProps {
+    event: Event;
+    onClick?: () => void;
+}
+
+const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
     return (
-        <div className="task-card">
-            <div className="task-card-header">
-                <h4>{event.eventName}</h4>
-            </div>
-            <div className="task-card-body">
-                <p>{event.description}</p>
-                <p>Starts: {new Date(event.startingDate).toLocaleString()}</p>
-                <p>Ends: {new Date(event.endingDate).toLocaleString()}</p>
+        <div className={`event-card ${event.type}`} onClick={onClick} style={{cursor: 'pointer'}}>
+            <h3>{event.eventName}</h3>
+            <span className="event-type-badge" style={{ fontSize: '0.8em', color: '#666', textTransform: 'uppercase' }}>
+                {event.type}
+            </span>
+            <p>{event.description}</p>
+            <div className="event-dates">
+                <span>{new Date(event.startingDate).toLocaleDateString()}</span>
             </div>
         </div>
     );

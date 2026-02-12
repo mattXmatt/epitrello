@@ -99,6 +99,8 @@ export const createColumn = async (boardId: string, columnName: string): Promise
     return data.result;
 };
 
+// --- TÂCHES ---
+
 export const createTask = async (columnId: string, task: Omit<Task, 'id'>): Promise<Task> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/task`, {
         method: 'POST',
@@ -110,6 +112,33 @@ export const createTask = async (columnId: string, task: Omit<Task, 'id'>): Prom
     return data.result;
 };
 
+export const getTask = async (taskId: string): Promise<Task> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/task/${taskId}`);
+    if (!response.ok) throw new Error('Failed to fetch task');
+    const data = await response.json();
+    return data.result;
+};
+
+export const updateTask = async (taskId: string, updates: Partial<Task>): Promise<Task> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/task/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+    });
+    if (!response.ok) throw new Error('Failed to update task');
+    const data = await response.json();
+    return data.result;
+};
+
+export const deleteTask = async (taskId: string): Promise<void> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/task/${taskId}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete task');
+};
+
+// --- ÉVÉNEMENTS ---
+
 export const createEvent = async (columnId: string, event: Omit<Event, 'id'>): Promise<Event> => {
     const response = await fetchWithCredentials(`${API_BASE_URL}/eventMeeting`, {
         method: 'POST',
@@ -119,4 +148,29 @@ export const createEvent = async (columnId: string, event: Omit<Event, 'id'>): P
     if (!response.ok) throw new Error('Failed to create event');
     const data = await response.json();
     return data.result;
+};
+
+export const getEvent = async (eventId: string): Promise<Event> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/eventMeeting/${eventId}`);
+    if (!response.ok) throw new Error('Failed to fetch event');
+    const data = await response.json();
+    return data.result;
+};
+
+export const updateEvent = async (eventId: string, updates: Partial<Event>): Promise<Event> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/eventMeeting/${eventId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+    });
+    if (!response.ok) throw new Error('Failed to update event');
+    const data = await response.json();
+    return data.result;
+};
+
+export const deleteEvent = async (eventId: string): Promise<void> => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/eventMeeting/${eventId}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete event');
 };
