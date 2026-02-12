@@ -105,6 +105,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({ column }) => {
             {selectedTaskId && (
                 <TaskDetailModal 
                     taskId={selectedTaskId} 
+                    boardId={column.id}
                     onClose={() => setSelectedTaskId(null)}
                     onUpdate={onTaskUpdate}
                     onDelete={onTaskDelete}
@@ -112,7 +113,8 @@ const BoardColumn: React.FC<BoardColumnProps> = ({ column }) => {
             )}
             {selectedEventId && (
                 <EventDetailModal 
-                    eventId={selectedEventId} 
+                    eventId={selectedEventId}
+                    boardId={column.id}
                     onClose={() => setSelectedEventId(null)}
                     onUpdate={onEventUpdate}
                     onDelete={onEventDelete}

@@ -1,12 +1,13 @@
 import React from 'react';
-import './task_card.css'; // Assure-toi que ce fichier existe
+import './task_card.css';
 
 export interface Task {
     id: string;
     taskName: string;
     description: string;
     priority?: 'P0' | 'P1' | 'P2' | 'None';
-    creatorName?: string; // Nouveau champ optionnel
+    creatorName?: string;
+    assignees?: { id: string; name: string }[];
 }
 
 interface TaskCardProps {

@@ -8,6 +8,7 @@ export interface Event {
     endingDate: string;
     type: 'meeting' | 'event';
     creatorName?: string;
+    assignees?: { id: string; name: string }[];
 }
 
 interface EventCardProps {

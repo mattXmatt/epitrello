@@ -8,6 +8,8 @@ export interface Board {
     boardName: string;
     description: string;
     columns: Column[];
+    backgroundColor?: string;
+    createdBy?: string;
 }
 
 export interface Column {
@@ -173,4 +175,60 @@ export const deleteEvent = async (eventId: string): Promise<void> => {
         method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete event');
+};
+
+// Board Settings
+export const updateBoardSettings = async (boardId: string, backgroundColor: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/board/${boardId}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backgroundColor }),
+    });
+    return response.json();
+};
+
+// Invites
+export const inviteUser = async (boardId: string, email: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/boardParticipant/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ boardId, email }),
+    });
+    return response.json();
+};
+
+export const getParticipants = async (boardId: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/boardParticipant/${boardId}`);
+    const data = await response.json();
+    return data.result;
+};
+
+// Assignations
+export const assignUser = async (cardId: string, userId: string, cardType: 'task' | 'event' = 'task') => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/assignee`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId, userId, cardType }),
+    });
+    return response.json();
+};
+
+export const unassignUser = async (cardId: string, userId: string, cardType: 'task' | 'event' = 'task') => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/assignee`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId, userId, cardType }),
+    });
+    return response.json();
+};
+
+// Event Presence
+
+export const updateEventPresence = async (eventId: string, userId: string, status: string) => {
+    const response = await fetchWithCredentials(`${API_BASE_URL}/eventPresence`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, userId, status }),
+    });
+    return response.json();
 };

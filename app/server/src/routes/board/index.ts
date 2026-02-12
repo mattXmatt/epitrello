@@ -1,30 +1,16 @@
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import {
     createBoardHandler,
     getBoardsHandler,
     getBoardByIdHandler,
-    updateBoardHandler,
     deleteBoardHandler,
+    updateBoardSettingsHandler
 } from './handlers.js';
-import {
-    createBoardSchema,
-    getBoardsSchema,
-    getBoardByIdSchema,
-    updateBoardSchema,
-    deleteBoardSchema,
-} from './schemas.js';
 
-export default async function (
-    fastify: FastifyInstance,
-    options: FastifyPluginOptions
-) {
-    fastify.post('/', { schema: createBoardSchema }, createBoardHandler);
-
-    fastify.get('/', { schema: getBoardsSchema }, getBoardsHandler);
-
-    fastify.get('/:id', { schema: getBoardByIdSchema }, getBoardByIdHandler);
-
-    fastify.put('/:id', { schema: updateBoardSchema }, updateBoardHandler);
-
-    fastify.delete('/:id', { schema: deleteBoardSchema }, deleteBoardHandler);
+export default async function (fastify: FastifyInstance) {
+    fastify.post('/', { onRequest: [fastify.authenticate] }, createBoardHandler);
+    fastify.get('/', { onRequest: [fastify.authenticate] }, getBoardsHandler);
+    fastify.get('/:id', { onRequest: [fastify.authenticate] }, getBoardByIdHandler);
+    fastify.put('/:id/settings', { onRequest: [fastify.authenticate] }, updateBoardSettingsHandler);
+    fastify.delete('/:id', { onRequest: [fastify.authenticate] }, deleteBoardHandler);
 }

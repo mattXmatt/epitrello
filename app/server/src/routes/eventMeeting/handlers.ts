@@ -4,10 +4,11 @@ import { createEventMeetingDTO, updateEventMeetingDTO } from './interfaces.js';
 
 export const createEventMeetingHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const fastify = request.server;
-    const eventMeetingData = request.body as createEventMeetingDTO;
+    const eventData = request.body as createEventMeetingDTO;
+    
     const user = request.user as { id: number };
 
-    const response = await eventMeetingService.createEventMeeting(fastify, eventMeetingData, user.id);
+    const response = await eventMeetingService.createEventMeeting(fastify, eventData, user.id);
 
     if (response.success) {
         reply.code(201).send(response);
@@ -33,8 +34,8 @@ export const getEventMeetingByIdHandler = async (request: FastifyRequest, reply:
 export const updateEventMeetingHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const fastify = request.server;
     const { id } = request.params as { id: number };
-    const eventMeetingData = request.body as updateEventMeetingDTO;
-    const response = await eventMeetingService.updateEventMeeting(fastify, id, eventMeetingData);
+    const eventData = request.body as updateEventMeetingDTO;
+    const response = await eventMeetingService.updateEventMeeting(fastify, id, eventData);
 
     if (response.success) {
         reply.code(200).send(response);

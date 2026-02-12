@@ -18,7 +18,10 @@ export default async function (
     fastify: FastifyInstance,
     options: FastifyPluginOptions
 ) {
-    fastify.post('/', { schema: createEventMeetingSchema }, createEventMeetingHandler);
+    fastify.post('/', { 
+        schema: createEventMeetingSchema,
+        onRequest: [fastify.authenticate] 
+    }, createEventMeetingHandler);
 
     fastify.get('/', { schema: getEventMeetingsSchema }, getEventMeetingsHandler);
 
