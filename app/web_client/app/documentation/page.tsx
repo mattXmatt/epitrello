@@ -2,10 +2,9 @@ import React from 'react';
 import '../styles/DashboardPage.css';
 
 const DocumentationPage = () => {
-    // Mock data, will be replaced with API call
     const documentation = {
-        documentName: 'EpiTrello API Documentation',
-        content: 'This is the documentation for the EpiTrello API. It covers all the available endpoints and how to use them.'
+        documentName: 'Documentation',
+        content: 'This is the documentation you put in EpiTrello.'
     };
 
     return (

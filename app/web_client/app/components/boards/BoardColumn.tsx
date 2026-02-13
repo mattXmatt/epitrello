@@ -12,21 +12,22 @@ import './board_column.css';
 interface BoardColumnData {
     id: string;
     columnName: string;
+    boardId: string;
     tasks: Task[];
     events: Event[];
 }
 
 interface BoardColumnProps {
     column: BoardColumnData;
+    onRefreshBoard: () => void; 
 }
 
-const BoardColumn: React.FC<BoardColumnProps> = ({ column }) => {
+const BoardColumn: React.FC<BoardColumnProps> = ({ column, onRefreshBoard }) => {
     const [tasks, setTasks] = useState<Task[]>(column.tasks || []);
     const [events, setEvents] = useState<Event[]>(column.events || []);
     
     const [showCreateTask, setShowCreateTask] = useState(false);
     const [showCreateEvent, setShowCreateEvent] = useState(false);
-
     const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
@@ -65,18 +66,10 @@ const BoardColumn: React.FC<BoardColumnProps> = ({ column }) => {
             <h2>{column.columnName}</h2>
             <div className="tasks-container">
                 {tasks.map(task => (
-                    <TaskCard 
-                        key={task.id} 
-                        task={task} 
-                        onClick={() => setSelectedTaskId(task.id)}
-                    />
+                    <TaskCard key={task.id} task={task} onClick={() => setSelectedTaskId(task.id)} />
                 ))}
                 {events?.map(event => (
-                    <EventCard 
-                        key={event.id} 
-                        event={event} 
-                        onClick={() => setSelectedEventId(event.id)}
-                    />
+                    <EventCard key={event.id} event={event} onClick={() => setSelectedEventId(event.id)} />
                 ))}
             </div>
             
@@ -88,7 +81,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({ column }) => {
             {showCreateTask && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h2>Nouvelle Tâche</h2>
+                        <h2>New Task</h2>
                         <CreateTaskForm columnId={column.id} onAddTask={handleAddTask} onClose={() => setShowCreateTask(false)} />
                     </div>
                 </div>
@@ -96,7 +89,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({ column }) => {
             {showCreateEvent && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h2>Nouvel Événement</h2>
+                        <h2>New Event</h2>
                         <CreateEventForm columnId={column.id} onAddEvent={handleAddEvent} onClose={() => setShowCreateEvent(false)} />
                     </div>
                 </div>
@@ -105,19 +98,23 @@ const BoardColumn: React.FC<BoardColumnProps> = ({ column }) => {
             {selectedTaskId && (
                 <TaskDetailModal 
                     taskId={selectedTaskId} 
-                    boardId={column.id}
+                    boardId={column.boardId}
+                    columnId={column.id}
                     onClose={() => setSelectedTaskId(null)}
                     onUpdate={onTaskUpdate}
                     onDelete={onTaskDelete}
+                    onMove={onRefreshBoard}
                 />
             )}
             {selectedEventId && (
                 <EventDetailModal 
-                    eventId={selectedEventId}
-                    boardId={column.id}
+                    eventId={selectedEventId} 
+                    boardId={column.boardId}
+                    columnId={column.id}
                     onClose={() => setSelectedEventId(null)}
                     onUpdate={onEventUpdate}
                     onDelete={onEventDelete}
+                    onMove={onRefreshBoard}
                 />
             )}
         </div>
