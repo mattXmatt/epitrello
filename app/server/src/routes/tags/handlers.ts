@@ -52,3 +52,17 @@ export const deleteTagHandler = async (request: FastifyRequest, reply: FastifyRe
         reply.code(400).send(response);
     }
 };
+
+export const assignTagHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const fastify = request.server;
+    const { cardId, tagId, type } = request.body as any;
+    const response = await tagService.assignTag(fastify, cardId, tagId, type);
+    reply.send(response);
+};
+
+export const unassignTagHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const fastify = request.server;
+    const { cardId, tagId, type } = request.body as any;
+    const response = await tagService.unassignTag(fastify, cardId, tagId, type);
+    reply.send(response);
+};

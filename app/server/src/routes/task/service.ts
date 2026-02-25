@@ -31,10 +31,22 @@ export const taskService = {
                        (u.name || ' ' || u.surname) as "creatorName",
                        COALESCE((
                            SELECT json_agg(json_build_object('id', ui.id, 'name', ui.name || ' ' || ui.surname))
-                           FROM assignee a
+                           FROM "assignee" a
                            JOIN "UserInfo" ui ON a."userId" = ui.id
                            WHERE a."cardId" = t.id AND a."cardType" = 'task'
-                       ), '[]') as assignees
+                       ), '[]') as assignees,
+                       COALESCE((
+                           SELECT json_agg(json_build_object('id', tg.id, 'name', tg.name, 'color', tg.color))
+                           FROM "cardTag" ct
+                           JOIN "tags" tg ON ct."tagId" = tg.id
+                           WHERE ct."cardId" = t.id AND ct."cardType" = 'task'
+                       ), '[]') as tags,
+                       COALESCE((
+                           SELECT json_agg(json_build_object('id', c.id, 'text', c.text, 'createdAt', c."createdAt", 'userName', uc.name, 'userId', c."userId"))
+                           FROM "Comment" c
+                           JOIN "UserInfo" uc ON c."userId" = uc.id
+                           WHERE c."cardId" = t.id AND c."cardType" = 'task'
+                       ), '[]') as comments
                 FROM "Task" t 
                 LEFT JOIN "UserInfo" u ON t."createdBy" = u.id 
                 WHERE t."boardColumnId" = $1 
@@ -51,13 +63,25 @@ export const taskService = {
         try {
             const query = `
                 SELECT t.*, 
-                    (u.name || ' ' || u.surname) as "creatorName",
-                    COALESCE((
-                        SELECT json_agg(json_build_object('id', ui.id, 'name', ui.name || ' ' || ui.surname))
-                        FROM assignee a
-                        JOIN "UserInfo" ui ON a."userId" = ui.id
-                        WHERE a."cardId" = t.id AND a."cardType" = 'task'
-                    ), '[]') as assignees
+                       (u.name || ' ' || u.surname) as "creatorName",
+                       COALESCE((
+                           SELECT json_agg(json_build_object('id', ui.id, 'name', ui.name || ' ' || ui.surname))
+                           FROM "assignee" a
+                           JOIN "UserInfo" ui ON a."userId" = ui.id
+                           WHERE a."cardId" = t.id AND a."cardType" = 'task'
+                       ), '[]') as assignees,
+                       COALESCE((
+                           SELECT json_agg(json_build_object('id', tg.id, 'name', tg.name, 'color', tg.color))
+                           FROM "cardTag" ct
+                           JOIN "tags" tg ON ct."tagId" = tg.id
+                           WHERE ct."cardId" = t.id AND ct."cardType" = 'task'
+                       ), '[]') as tags,
+                       COALESCE((
+                           SELECT json_agg(json_build_object('id', c.id, 'text', c.text, 'createdAt', c."createdAt", 'userName', uc.name, 'userId', c."userId"))
+                           FROM "Comment" c
+                           JOIN "UserInfo" uc ON c."userId" = uc.id
+                           WHERE c."cardId" = t.id AND c."cardType" = 'task'
+                       ), '[]') as comments
                 FROM "Task" t 
                 LEFT JOIN "UserInfo" u ON t."createdBy" = u.id 
                 WHERE t.id = $1

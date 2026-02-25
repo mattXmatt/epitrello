@@ -59,5 +59,29 @@ export const tagService = {
         } catch (error: any) {
             return { success: false, message: error.message };
         }
+    },
+
+    async assignTag(fastify: any, cardId: number, tagId: number, type: string): Promise<tagResponseDTO> {
+        try {
+            await fastify.pg.query(
+                'INSERT INTO "cardTag" ("cardId", "tagId", "cardType") VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+                [cardId, tagId, type]
+            );
+            return { success: true };
+        } catch (error: any) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    async unassignTag(fastify: any, cardId: number, tagId: number, type: string): Promise<tagResponseDTO> {
+        try {
+            await fastify.pg.query(
+                'DELETE FROM "cardTag" WHERE "cardId" = $1 AND "tagId" = $2 AND "cardType" = $3',
+                [cardId, tagId, type]
+            );
+            return { success: true };
+        } catch (error: any) {
+            return { success: false, message: error.message };
+        }
     }
 }

@@ -1,10 +1,13 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+
 import {
     createTagHandler,
     getTagsHandler,
     getTagByIdHandler,
     updateTagHandler,
     deleteTagHandler,
+    assignTagHandler,
+    unassignTagHandler
 } from './handlers.js';
 import {
     createTagSchema,
@@ -27,4 +30,8 @@ export default async function (
     fastify.put('/:id', { schema: updateTagSchema }, updateTagHandler);
 
     fastify.delete('/:id', { schema: deleteTagSchema }, deleteTagHandler);
+
+    fastify.post('/assign', assignTagHandler);
+    
+    fastify.delete('/assign', unassignTagHandler);
 }

@@ -6,6 +6,12 @@ const server = fastify({
   logger: true
 });
 
+server.addHook('onRoute', (routeOptions) => {
+    if (routeOptions.schema && routeOptions.schema.response) {
+        delete routeOptions.schema.response;
+    }
+});
+
 server.register(cookie, {
   secret: "un-secret-pour-signer-les-cookies",
   parseOptions: {}

@@ -11,75 +11,58 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ columnId, onAddEvent,
     const [eventName, setEventName] = useState('');
     const [description, setDescription] = useState('');
     const [startingDate, setStartingDate] = useState('');
-    const [endingDate, setEndingDate] = useState('');
-    const [type, setType] = useState<'meeting' | 'event'>('event');
+    const [location, setLocation] = useState('');
+    const [type, setType] = useState<'meeting' | 'event'>('meeting');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        // CORRECTION ICI : Conversion en format ISO complet pour le backend
-        const isoStartingDate = new Date(startingDate).toISOString();
-        const isoEndingDate = new Date(endingDate).toISOString();
+        if (!eventName.trim() || !startingDate) return;
 
-        onAddEvent({ 
-            eventName, 
-            description, 
-            startingDate: isoStartingDate, 
-            endingDate: isoEndingDate, 
-            type 
-        });
+        const newEvent: Omit<Event, 'id'> = {
+            eventName,
+            description,
+            startingDate: new Date(startingDate).toISOString(),
+            location,
+            type,
+        };
+        
+        onAddEvent(newEvent);
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <input
-                type="text"
-                value={eventName}
-                onChange={(e) => setEventName(e.target.value)}
-                placeholder="Event Name"
-                required
-            />
-            
-            <select 
-                value={type} 
-                onChange={(e) => setType(e.target.value as 'meeting' | 'event')}
-                style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
-            >
-                <option value="event">Event</option>
-                <option value="meeting">Meeting</option>
-            </select>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '10px' }}>
+            <div>
+                <label style={{ fontSize: '0.85em', fontWeight: 'bold', color: '#5e6c84' }}>Event Title *</label>
+                <input autoFocus placeholder="E.g. Daily Standup" value={eventName} onChange={e => setEventName(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #dfe1e6', marginTop: '5px' }} />
+            </div>
 
-            <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Event Description"
-            />
-            <div style={{display: 'flex', gap: '10px'}}>
-                <div style={{flex: 1}}>
-                    <label style={{fontSize: '0.8em'}}>Début</label>
-                    <input
-                        type="datetime-local"
-                        value={startingDate}
-                        onChange={(e) => setStartingDate(e.target.value)}
-                        required
-                    />
+            <div style={{ display: 'flex', gap: '15px' }}>
+                <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '0.85em', fontWeight: 'bold', color: '#5e6c84' }}>Start Date *</label>
+                    <input type="datetime-local" value={startingDate} onChange={e => setStartingDate(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #dfe1e6', marginTop: '5px' }} />
                 </div>
-                <div style={{flex: 1}}>
-                    <label style={{fontSize: '0.8em'}}>Fin</label>
-                    <input
-                        type="datetime-local"
-                        value={endingDate}
-                        onChange={(e) => setEndingDate(e.target.value)}
-                        required
-                    />
+                <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '0.85em', fontWeight: 'bold', color: '#5e6c84' }}>Type</label>
+                    <select value={type} onChange={e => setType(e.target.value as any)} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #dfe1e6', marginTop: '5px' }}>
+                        <option value="meeting">Meeting</option>
+                        <option value="event">Event</option>
+                    </select>
                 </div>
             </div>
 
-            <div className="modal-actions">
-                <button type="submit">Add {type === 'meeting' ? 'Meeting' : 'Event'}</button>
-                <button type="button" onClick={onClose}>
-                    Cancel
-                </button>
+            <div>
+                <label style={{ fontSize: '0.85em', fontWeight: 'bold', color: '#5e6c84' }}>Location / Link</label>
+                <input placeholder="Zoom link or Room 3..." value={location} onChange={e => setLocation(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #dfe1e6', marginTop: '5px' }} />
+            </div>
+
+            <div>
+                <label style={{ fontSize: '0.85em', fontWeight: 'bold', color: '#5e6c84' }}>Description</label>
+                <textarea placeholder="Agenda..." value={description} onChange={e => setDescription(e.target.value)} rows={3} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #dfe1e6', marginTop: '5px' }} />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                <button type="button" onClick={onClose} style={{ padding: '10px 15px', border: '1px solid #dfe1e6', background: 'white', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" style={{ padding: '10px 15px', background: '#006644', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Create Event</button>
             </div>
         </form>
     );

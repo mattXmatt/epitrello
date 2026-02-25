@@ -2,38 +2,24 @@ import { createBoardColumnDTO, updateBoardColumnDTO, boardColumnResponseDTO } fr
 
 export const boardColumnService = {
     async createBoardColumn(fastify: any, data: createBoardColumnDTO): Promise<boardColumnResponseDTO> {
-        const client = await fastify.pg.connect();
         try {
-            await client.query('BEGIN');
-
-            const maxIndexRes = await client.query(
-                'SELECT MAX("columnIndex") as max_index FROM "boardColumn" WHERE "boardId" = $1', 
-                [data.boardId]
+            const newColumn = await fastify.pg.query(
+                'INSERT INTO "boardColumn" ("columnName", "description", "boardId", "columnIndex", "color") VALUES ($1, $2, $3, $4, $5) RETURNING *',
+                [data.columnName, data.description, data.boardId, data.columnIndex, data.color || 'transparent']
             );
-            const nextIndex = (maxIndexRes.rows[0].max_index || 0) + 1;
-
-            const newBoardColumn = await client.query(
-                'INSERT INTO "boardColumn" ("columnName", "description", "boardId", "columnIndex") VALUES ($1, $2, $3, $4) RETURNING *',
-                [data.columnName, data.description || '', data.boardId, nextIndex]
-            );
-
-            await client.query('COMMIT');
-            return { success: true, result: newBoardColumn.rows[0] };
+            return { success: true, result: newColumn.rows[0] };
         } catch (error: any) {
-            await client.query('ROLLBACK');
             return { success: false, message: error.message };
-        } finally {
-            client.release();
         }
     },
 
     async getBoardColumns(fastify: any, boardId: number): Promise<boardColumnResponseDTO> {
         try {
-            const boardColumns = await fastify.pg.query(
+            const columns = await fastify.pg.query(
                 'SELECT * FROM "boardColumn" WHERE "boardId" = $1 ORDER BY "columnIndex"',
                 [boardId]
             );
-            return { success: true, result: boardColumns.rows };
+            return { success: true, result: columns.rows };
         } catch (error: any) {
             return { success: false, message: error.message };
         }
@@ -41,11 +27,11 @@ export const boardColumnService = {
 
     async getBoardColumnById(fastify: any, id: number): Promise<boardColumnResponseDTO> {
         try {
-            const boardColumn = await fastify.pg.query(
+            const column = await fastify.pg.query(
                 'SELECT * FROM "boardColumn" WHERE id = $1',
                 [id]
             );
-            return { success: true, result: boardColumn.rows[0] };
+            return { success: true, result: column.rows[0] };
         } catch (error: any) {
             return { success: false, message: error.message };
         }
@@ -53,11 +39,18 @@ export const boardColumnService = {
 
     async updateBoardColumn(fastify: any, id: number, data: updateBoardColumnDTO): Promise<boardColumnResponseDTO> {
         try {
-            const boardColumn = await fastify.pg.query(
-                'UPDATE "boardColumn" SET "columnName" = $1, "description" = $2, "columnIndex" = $3 WHERE id = $4 RETURNING *',
-                [data.columnName, data.description, data.columnIndex, id]
-            );
-            return { success: true, result: boardColumn.rows[0] };
+            // CONSTRUCTION DYNAMIQUE DE LA REQUÊTE POUR NE METTRE À JOUR QUE LES CHAMPS FOURNIS
+            const fields = Object.keys(data).filter(key => (data as any)[key] !== undefined);
+            const values = Object.values(data).filter(value => value !== undefined);
+            
+            if (fields.length === 0) return { success: false, message: "No fields to update" };
+
+            const setClause = fields.map((field, index) => `"${field}" = $${index + 1}`).join(', ');
+            const query = `UPDATE "boardColumn" SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`;
+            
+            const result = await fastify.pg.query(query, [...values, id]);
+            
+            return { success: true, result: result.rows[0] };
         } catch (error: any) {
             return { success: false, message: error.message };
         }
@@ -69,9 +62,9 @@ export const boardColumnService = {
                 'DELETE FROM "boardColumn" WHERE id = $1',
                 [id]
             );
-            return { success: true, message: 'BoardColumn deleted successfully' };
+            return { success: true, message: 'Column deleted successfully' };
         } catch (error: any) {
             return { success: false, message: error.message };
         }
     }
-}
+}   

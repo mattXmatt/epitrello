@@ -4,19 +4,15 @@ export const eventMeetingService = {
     async createEventMeeting(fastify: any, data: createEventMeetingDTO, userId: number): Promise<eventMeetingResponseDTO> {
         const client = await fastify.pg.connect();
         try {
-            if (data.type === 'meeting') {
-                const start = new Date(data.startingDate).getTime();
-                const end = new Date(data.endingDate).getTime();
-                if ((end - start) / (1000 * 60 * 60) > 5) return { success: false, message: "Meeting max 5h" };
-            }
             await client.query('BEGIN');
             const maxIndexRes = await client.query('SELECT MAX("eventIndex") as max_index FROM "EventMeeting" WHERE "boardColumnId" = $1', [data.boardColumnId]);
             const nextIndex = (maxIndexRes.rows[0].max_index || 0) + 1;
 
             const newEvent = await client.query(
-                'INSERT INTO "EventMeeting" ("eventName", "eventIndex", "boardColumnId", "description", "startingDate", "endingDate", "createdBy", "type") VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-                [data.eventName, nextIndex, data.boardColumnId, data.description || '', data.startingDate, data.endingDate, userId, data.type]
+                'INSERT INTO "EventMeeting" ("eventName", "eventIndex", "boardColumnId", "description", "startingDate", "endingDate", "location", "type", "createdBy") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+                [data.eventName, nextIndex, data.boardColumnId, data.description || '', data.startingDate || new Date(), data.endingDate || null, data.location || '', data.type || 'event', userId]
             );
+
             await client.query('COMMIT');
             return { success: true, result: newEvent.rows[0] };
         } catch (error: any) {
@@ -30,24 +26,15 @@ export const eventMeetingService = {
     async getEventMeetings(fastify: any, boardColumnId: number): Promise<eventMeetingResponseDTO> {
         try {
             const query = `
-                SELECT e.*, 
+                SELECT em.*, 
                        (u.name || ' ' || u.surname) as "creatorName",
-                       COALESCE((
-                           SELECT json_agg(json_build_object('id', ui.id, 'name', ui.name || ' ' || ui.surname))
-                           FROM assignee a
-                           JOIN "UserInfo" ui ON a."userId" = ui.id
-                           WHERE a."cardId" = e.id AND a."cardType" = 'event'
-                       ), '[]') as assignees,
-                       COALESCE((
-                           SELECT json_agg(json_build_object('userId', ep."userId", 'status', ep.status, 'name', ui.name || ' ' || ui.surname))
-                           FROM "eventPresence" ep
-                           JOIN "UserInfo" ui ON ep."userId" = ui.id
-                           WHERE ep."eventId" = e.id
-                       ), '[]') as presence
-                FROM "EventMeeting" e 
-                LEFT JOIN "UserInfo" u ON e."createdBy" = u.id 
-                WHERE e."boardColumnId" = $1 
-                ORDER BY e."eventIndex"
+                       COALESCE((SELECT json_agg(json_build_object('id', ui.id, 'name', ui.name || ' ' || ui.surname)) FROM "assignee" a JOIN "UserInfo" ui ON a."userId" = ui.id WHERE a."cardId" = em.id AND a."cardType" = 'event'), '[]') as assignees,
+                       COALESCE((SELECT json_agg(json_build_object('id', tg.id, 'name', tg.name, 'color', tg.color)) FROM "cardTag" ct JOIN "tags" tg ON ct."tagId" = tg.id WHERE ct."cardId" = em.id AND ct."cardType" = 'event'), '[]') as tags,
+                       COALESCE((SELECT json_agg(json_build_object('id', c.id, 'text', c.text, 'createdAt', c."createdAt", 'userName', uc.name, 'userId', c."userId")) FROM "Comment" c JOIN "UserInfo" uc ON c."userId" = uc.id WHERE c."cardId" = em.id AND c."cardType" = 'event'), '[]') as comments
+                FROM "EventMeeting" em 
+                LEFT JOIN "UserInfo" u ON em."createdBy" = u.id 
+                WHERE em."boardColumnId" = $1 
+                ORDER BY em."eventIndex"
             `;
             const events = await fastify.pg.query(query, [boardColumnId]);
             return { success: true, result: events.rows };
@@ -59,23 +46,14 @@ export const eventMeetingService = {
     async getEventMeetingById(fastify: any, id: number): Promise<eventMeetingResponseDTO> {
         try {
             const query = `
-                SELECT e.*, 
+                SELECT em.*, 
                        (u.name || ' ' || u.surname) as "creatorName",
-                       COALESCE((
-                           SELECT json_agg(json_build_object('id', ui.id, 'name', ui.name || ' ' || ui.surname))
-                           FROM assignee a
-                           JOIN "UserInfo" ui ON a."userId" = ui.id
-                           WHERE a."cardId" = e.id AND a."cardType" = 'event'
-                       ), '[]') as assignees,
-                       COALESCE((
-                           SELECT json_agg(json_build_object('userId', ep."userId", 'status', ep.status, 'name', ui.name || ' ' || ui.surname))
-                           FROM "eventPresence" ep
-                           JOIN "UserInfo" ui ON ep."userId" = ui.id
-                           WHERE ep."eventId" = e.id
-                       ), '[]') as presence
-                FROM "EventMeeting" e 
-                LEFT JOIN "UserInfo" u ON e."createdBy" = u.id 
-                WHERE e.id = $1
+                       COALESCE((SELECT json_agg(json_build_object('id', ui.id, 'name', ui.name || ' ' || ui.surname)) FROM "assignee" a JOIN "UserInfo" ui ON a."userId" = ui.id WHERE a."cardId" = em.id AND a."cardType" = 'event'), '[]') as assignees,
+                       COALESCE((SELECT json_agg(json_build_object('id', tg.id, 'name', tg.name, 'color', tg.color)) FROM "cardTag" ct JOIN "tags" tg ON ct."tagId" = tg.id WHERE ct."cardId" = em.id AND ct."cardType" = 'event'), '[]') as tags,
+                       COALESCE((SELECT json_agg(json_build_object('id', c.id, 'text', c.text, 'createdAt', c."createdAt", 'userName', uc.name, 'userId', c."userId")) FROM "Comment" c JOIN "UserInfo" uc ON c."userId" = uc.id WHERE c."cardId" = em.id AND c."cardType" = 'event'), '[]') as comments
+                FROM "EventMeeting" em 
+                LEFT JOIN "UserInfo" u ON em."createdBy" = u.id 
+                WHERE em.id = $1
             `;
             const event = await fastify.pg.query(query, [id]);
             return { success: true, result: event.rows[0] };
@@ -103,7 +81,7 @@ export const eventMeetingService = {
     async deleteEventMeeting(fastify: any, id: number): Promise<eventMeetingResponseDTO> {
         try {
             await fastify.pg.query('DELETE FROM "EventMeeting" WHERE id = $1', [id]);
-            return { success: true, message: 'EventMeeting deleted successfully' };
+            return { success: true, message: 'Event deleted successfully' };
         } catch (error: any) {
             return { success: false, message: error.message };
         }

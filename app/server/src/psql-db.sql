@@ -1,14 +1,38 @@
-CREATE TYPE role_enum AS ENUM ('admin', 'member', 'guest') ON CONFLICT DO UPDATE;
+DO $$ BEGIN
+    CREATE TYPE role_enum AS ENUM ('admin', 'member', 'guest');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE card_type_enum AS ENUM ('event', 'task') ON CONFLICT DO UPDATE;
+DO $$ BEGIN
+    CREATE TYPE card_type_enum AS ENUM ('event', 'task');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE priority_enum AS ENUM ('P0', 'P1', 'P2', 'None') ON CONFLICT DO UPDATE;
+DO $$ BEGIN
+    CREATE TYPE priority_enum AS ENUM ('P0', 'P1', 'P2', 'None');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE log_action_enum AS ENUM ('create', 'delete', 'update', 'assign_user', 'add_user') ON CONFLICT DO UPDATE;
+DO $$ BEGIN
+    CREATE TYPE log_action_enum AS ENUM ('create', 'delete', 'update', 'assign_user', 'add_user');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE log_entity_enum AS ENUM ('task', 'board', 'documentation', 'board_column', 'board_settings', 'user') ON CONFLICT DO UPDATE;
+DO $$ BEGIN
+    CREATE TYPE log_entity_enum AS ENUM ('task', 'board', 'documentation', 'board_column', 'board_settings', 'user');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE event_type_enum AS ENUM ('meeting', 'event') ON CONFLICT DO UPDATE;
+DO $$ BEGIN
+    CREATE TYPE event_type_enum AS ENUM ('meeting', 'event');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "UserInfo" (
     "id" BIGSERIAL PRIMARY KEY,
@@ -29,7 +53,12 @@ CREATE TABLE IF NOT EXISTS "UserConnection" (
     "scope" TEXT NULL,
     "tokenType" VARCHAR(255) NULL
 );
-ALTER TABLE "UserConnection" ADD CONSTRAINT "uc_provider_account" UNIQUE ("provider", "providerAccountId");
+DO $$ BEGIN
+    ALTER TABLE "UserConnection" ADD CONSTRAINT "uc_provider_account" UNIQUE ("provider", "providerAccountId");
+EXCEPTION
+    WHEN duplicate_object THEN null;
+    WHEN duplicate_table THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "Board" (
     "id" BIGSERIAL PRIMARY KEY,
@@ -54,13 +83,18 @@ CREATE TABLE IF NOT EXISTS "BoardParticipant" (
     "id" BIGSERIAL PRIMARY KEY,
     "boardId" BIGINT NOT NULL REFERENCES "Board"("id") ON DELETE CASCADE,
     "participantUserId" BIGINT NOT NULL REFERENCES "UserInfo"("id"),
-    "role" role_enum NOT NULL
+    "role" role_enum NOT NULL DEFAULT 'member'
 );
-ALTER TABLE "BoardParticipant" ADD CONSTRAINT "uc_board_user" UNIQUE ("boardId", "participantUserId");
+DO $$ BEGIN
+    ALTER TABLE "BoardParticipant" ADD CONSTRAINT "uc_board_user" UNIQUE ("boardId", "participantUserId");
+EXCEPTION
+    WHEN duplicate_object THEN null;
+    WHEN duplicate_table THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "Documentation" (
     "id" BIGSERIAL PRIMARY KEY,
-    "boardId" BIGINT NOT NULL REFERENCES "Board"("id") ON DELETE CASCADE,
+    "boardId" BIGINT NULL,
     "documentName" VARCHAR(255) NOT NULL,
     "content" TEXT NULL,
     "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -71,7 +105,7 @@ CREATE TABLE IF NOT EXISTS "Documentation" (
 
 CREATE TABLE IF NOT EXISTS "BoardSettings" (
     "id" BIGSERIAL PRIMARY KEY,
-    "boardId" BIGINT NOT NULL UNIQUE REFERENCES "Board"("id") ON DELETE CASCADE,
+    "boardId" BIGINT NULL,
     "backgroundColor" VARCHAR(255) NULL
 );
 
@@ -110,6 +144,7 @@ CREATE TABLE IF NOT EXISTS "Task" (
     "description" TEXT NULL,
     "startingDate" TIMESTAMP WITH TIME ZONE NOT NULL,
     "endingDate" TIMESTAMP WITH TIME ZONE NULL,
+    "dueDate" TIMESTAMP WITH TIME ZONE NULL,
     "duration" BIGINT NULL,
     "integrations" TEXT NULL,
     "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -128,7 +163,12 @@ CREATE TABLE IF NOT EXISTS "eventPresence" (
     "status" VARCHAR(50) NOT NULL
 );
 
-ALTER TABLE "eventPresence" ADD CONSTRAINT "uc_event_user_presence" UNIQUE ("eventId", "userId");
+DO $$ BEGIN
+    ALTER TABLE "eventPresence" ADD CONSTRAINT "uc_event_user_presence" UNIQUE ("eventId", "userId");
+EXCEPTION
+    WHEN duplicate_object THEN null;
+    WHEN duplicate_table THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "assignee" (
     "id" BIGSERIAL PRIMARY KEY,
@@ -143,7 +183,12 @@ CREATE TABLE IF NOT EXISTS "tags" (
     "name" VARCHAR(255) NOT NULL,
     "color" VARCHAR(255) NOT NULL
 );
-ALTER TABLE "tags" ADD CONSTRAINT "uc_tag_board_name" UNIQUE ("boardId", "name");
+DO $$ BEGIN
+    ALTER TABLE "tags" ADD CONSTRAINT "uc_tag_board_name" UNIQUE ("boardId", "name");
+EXCEPTION
+    WHEN duplicate_object THEN null;
+    WHEN duplicate_table THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "cardTag" (
     "id" BIGSERIAL PRIMARY KEY,
@@ -151,7 +196,12 @@ CREATE TABLE IF NOT EXISTS "cardTag" (
     "tagId" BIGINT NOT NULL REFERENCES "tags"("id") ON DELETE CASCADE,
     "cardType" card_type_enum NOT NULL
 );
-ALTER TABLE "cardTag" ADD CONSTRAINT "uc_card_tag_type" UNIQUE ("cardId", "tagId", "cardType");
+DO $$ BEGIN
+    ALTER TABLE "cardTag" ADD CONSTRAINT "uc_card_tag_type" UNIQUE ("cardId", "tagId", "cardType");
+EXCEPTION
+    WHEN duplicate_object THEN null;
+    WHEN duplicate_table THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "ActivityLogs" (
     "id" BIGSERIAL PRIMARY KEY,
@@ -165,6 +215,125 @@ CREATE TABLE IF NOT EXISTS "ActivityLogs" (
     "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS "Comment" (
+    "id" BIGSERIAL PRIMARY KEY,
+    "cardId" BIGINT NOT NULL,
+    "cardType" card_type_enum NOT NULL,
+    "userId" BIGINT NOT NULL REFERENCES "UserInfo"("id") ON DELETE CASCADE,
+    "text" TEXT NOT NULL,
+    "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP WITH TIME ZONE NULL
+);
 
-ALTER TABLE "Board" ADD CONSTRAINT "fk_board_settings" FOREIGN KEY ("boardSettingsId") REFERENCES "BoardSettings"("id") ON DELETE CASCADE;
-ALTER TABLE "Board" ADD CONSTRAINT "fk_board_documentation" FOREIGN KEY ("documentationSectionId") REFERENCES "Documentation"("id") ON DELETE CASCADE;
+CREATE TABLE IF NOT EXISTS "Notification" (
+    "id" BIGSERIAL PRIMARY KEY,
+    "userId" BIGINT NOT NULL REFERENCES "UserInfo"("id") ON DELETE CASCADE,
+    "message" TEXT NOT NULL,
+    "isRead" BOOLEAN DEFAULT FALSE,
+    "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+DO $$ BEGIN
+    ALTER TABLE "Board" ADD CONSTRAINT "fk_board_settings" FOREIGN KEY ("boardSettingsId") REFERENCES "BoardSettings"("id") ON DELETE CASCADE;
+EXCEPTION
+    WHEN duplicate_object OR duplicate_table THEN null;
+END $$;
+
+DO $$ BEGIN
+    ALTER TABLE "BoardSettings" ADD CONSTRAINT "fk_boardsettings_board" FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE CASCADE;
+EXCEPTION
+    WHEN duplicate_object OR duplicate_table THEN null;
+END $$;
+
+DO $$ BEGIN
+    ALTER TABLE "Documentation" ADD CONSTRAINT "fk_documentation_board" FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE CASCADE;
+EXCEPTION
+    WHEN duplicate_object OR duplicate_table THEN null;
+END $$;
+
+CREATE OR REPLACE FUNCTION create_default_board_content()
+RETURNS TRIGGER AS $$
+DECLARE
+    col1_id BIGINT;
+BEGIN
+    INSERT INTO "boardColumn" ("boardId", "columnName", "columnIndex")
+    VALUES (NEW.id, 'TODO', 0) RETURNING id INTO col1_id;
+
+    INSERT INTO "boardColumn" ("boardId", "columnName", "columnIndex")
+    VALUES (NEW.id, 'ON PROGRESS', 1);
+
+    INSERT INTO "boardColumn" ("boardId", "columnName", "columnIndex")
+    VALUES (NEW.id, 'DONE', 2);
+
+    INSERT INTO "Task" ("taskName", "taskIndex", "boardColumnId", "description", "startingDate", "createdBy", "priority")
+    VALUES ('First task', 0, col1_id, 'This is an example', CURRENT_TIMESTAMP, NEW."createdBy", 'None');
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_create_default_board_content ON "Board";
+CREATE TRIGGER trigger_create_default_board_content
+AFTER INSERT ON "Board"
+FOR EACH ROW EXECUTE FUNCTION create_default_board_content();
+
+DO $$ BEGIN
+    ALTER TABLE "Board" ADD CONSTRAINT "fk_board_documentation" FOREIGN KEY ("documentationSectionId") REFERENCES "Documentation"("id") ON DELETE CASCADE;
+EXCEPTION
+    WHEN duplicate_object OR duplicate_table THEN null;
+END $$;
+
+CREATE OR REPLACE FUNCTION get_board_details(p_board_id BIGINT)
+RETURNS json AS $$
+BEGIN
+    RETURN (SELECT row_to_json(res) FROM (
+        SELECT
+            b.*,
+            COALESCE(
+                (
+                    SELECT json_agg(bc_agg ORDER BY bc_agg."columnIndex")
+                    FROM (
+                        SELECT
+                            bc.*,
+                            COALESCE(
+                                (
+                                    SELECT json_agg(
+                                        row_to_json(t)::jsonb || jsonb_build_object(
+                                            'assignees', COALESCE((
+                                                SELECT json_agg(json_build_object('id', ui.id, 'name', ui.name || ' ' || ui.surname))
+                                                FROM "assignee" a
+                                                JOIN "UserInfo" ui ON a."userId" = ui.id
+                                                WHERE a."cardId" = t.id AND a."cardType" = 'task'
+                                            ), '[]'::json),
+                                            'tags', COALESCE((
+                                                SELECT json_agg(json_build_object('id', tg.id, 'name', tg.name, 'color', tg.color))
+                                                FROM "cardTag" ct
+                                                JOIN "tags" tg ON ct."tagId" = tg.id
+                                                WHERE ct."cardId" = t.id AND ct."cardType" = 'task'
+                                            ), '[]'::json),
+                                            'comments', COALESCE((
+                                                SELECT json_agg(json_build_object('id', c.id, 'text', c.text, 'createdAt', c."createdAt", 'userName', uc.name, 'userId', c."userId"))
+                                                FROM "Comment" c
+                                                JOIN "UserInfo" uc ON c."userId" = uc.id
+                                                WHERE c."cardId" = t.id AND c."cardType" = 'task'
+                                            ), '[]'::json)
+                                        ) ORDER BY t."taskIndex"
+                                    ) FROM "Task" t WHERE t."boardColumnId" = bc.id
+                                ),
+                                '[]'::json
+                            ) AS tasks,
+                            COALESCE(
+                                (SELECT json_agg(em.* ORDER BY em."eventIndex") FROM "EventMeeting" em WHERE em."boardColumnId" = bc.id),
+                                '[]'::json
+                            ) AS events
+                        FROM "boardColumn" AS bc
+                        WHERE bc."boardId" = b.id
+                    ) AS bc_agg
+                ),
+                '[]'::json
+            ) AS columns
+        FROM "Board" AS b
+        WHERE b.id = p_board_id
+    ) res);
+END;
+$$ LANGUAGE plpgsql;

@@ -22,14 +22,21 @@ const CreateBoardPage = () => {
         e.preventDefault();
         try {
             const newBoard = await createBoard(boardName, description);
-            router.push(`/boards/${newBoard.id}`);
+            
+            if (newBoard && newBoard.result && newBoard.result.id) {
+                router.push(`/boards/${newBoard.result.id}`);
+            } else if (newBoard && newBoard.id) {
+                router.push(`/boards/${newBoard.id}`);
+            } else {
+                console.error("Failed to find board's ID", newBoard);
+            }
+            
         } catch (error) {
             console.error('Failed to create board', error);
         }
     };
 
     if (!isAuthenticated) {
-        // Render nothing or a loading spinner while redirecting
         return null;
     }
 

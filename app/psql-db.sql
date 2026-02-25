@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS "UserConnection" (
     "scope" TEXT NULL,
     "tokenType" VARCHAR(255) NULL
 );
+
 DO $$ BEGIN
     ALTER TABLE "UserConnection" ADD CONSTRAINT "uc_provider_account" UNIQUE ("provider", "providerAccountId");
 EXCEPTION
@@ -83,7 +84,7 @@ CREATE TABLE IF NOT EXISTS "BoardParticipant" (
     "id" BIGSERIAL PRIMARY KEY,
     "boardId" BIGINT NOT NULL REFERENCES "Board"("id") ON DELETE CASCADE,
     "participantUserId" BIGINT NOT NULL REFERENCES "UserInfo"("id"),
-    "role" role_enum NOT NULL
+    "role" role_enum NOT NULL DEFAULT 'member'
 );
 DO $$ BEGIN
     ALTER TABLE "BoardParticipant" ADD CONSTRAINT "uc_board_user" UNIQUE ("boardId", "participantUserId");
@@ -109,12 +110,14 @@ CREATE TABLE IF NOT EXISTS "BoardSettings" (
     "backgroundColor" VARCHAR(255) NULL
 );
 
+-- ICI ON A INTÉGRÉ LA COLONNE "color" DIRECTEMENT
 CREATE TABLE IF NOT EXISTS "boardColumn" (
     "id" BIGSERIAL PRIMARY KEY,
     "columnName" VARCHAR(255) NOT NULL,
     "description" TEXT NULL,
     "boardId" BIGINT NOT NULL REFERENCES "Board"("id") ON DELETE CASCADE,
-    "columnIndex" INTEGER NOT NULL
+    "columnIndex" INTEGER NOT NULL,
+    "color" VARCHAR(20) DEFAULT 'transparent'
 );
 
 CREATE TABLE IF NOT EXISTS "EventMeeting" (
@@ -144,6 +147,7 @@ CREATE TABLE IF NOT EXISTS "Task" (
     "description" TEXT NULL,
     "startingDate" TIMESTAMP WITH TIME ZONE NOT NULL,
     "endingDate" TIMESTAMP WITH TIME ZONE NULL,
+    "dueDate" TIMESTAMP WITH TIME ZONE NULL,
     "duration" BIGINT NULL,
     "integrations" TEXT NULL,
     "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -214,6 +218,24 @@ CREATE TABLE IF NOT EXISTS "ActivityLogs" (
     "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS "Comment" (
+    "id" BIGSERIAL PRIMARY KEY,
+    "cardId" BIGINT NOT NULL,
+    "cardType" card_type_enum NOT NULL,
+    "userId" BIGINT NOT NULL REFERENCES "UserInfo"("id") ON DELETE CASCADE,
+    "text" TEXT NOT NULL,
+    "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP WITH TIME ZONE NULL
+);
+
+CREATE TABLE IF NOT EXISTS "Notification" (
+    "id" BIGSERIAL PRIMARY KEY,
+    "userId" BIGINT NOT NULL REFERENCES "UserInfo"("id") ON DELETE CASCADE,
+    "message" TEXT NOT NULL,
+    "isRead" BOOLEAN DEFAULT FALSE,
+    "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 DO $$ BEGIN
     ALTER TABLE "Board" ADD CONSTRAINT "fk_board_settings" FOREIGN KEY ("boardSettingsId") REFERENCES "BoardSettings"("id") ON DELETE CASCADE;
 EXCEPTION
@@ -237,14 +259,14 @@ RETURNS TRIGGER AS $$
 DECLARE
     col1_id BIGINT;
 BEGIN
-    INSERT INTO "boardColumn" ("boardId", "columnName", "columnIndex")
-    VALUES (NEW.id, 'TODO', 0) RETURNING id INTO col1_id;
+    INSERT INTO "boardColumn" ("boardId", "columnName", "columnIndex", "color")
+    VALUES (NEW.id, 'TODO', 0, 'transparent') RETURNING id INTO col1_id;
 
-    INSERT INTO "boardColumn" ("boardId", "columnName", "columnIndex")
-    VALUES (NEW.id, 'ON PROGRESS', 1);
+    INSERT INTO "boardColumn" ("boardId", "columnName", "columnIndex", "color")
+    VALUES (NEW.id, 'ON PROGRESS', 1, 'transparent');
 
-    INSERT INTO "boardColumn" ("boardId", "columnName", "columnIndex")
-    VALUES (NEW.id, 'DONE', 2);
+    INSERT INTO "boardColumn" ("boardId", "columnName", "columnIndex", "color")
+    VALUES (NEW.id, 'DONE', 2, 'transparent');
 
     INSERT INTO "Task" ("taskName", "taskIndex", "boardColumnId", "description", "startingDate", "createdBy", "priority")
     VALUES ('First task', 0, col1_id, 'This is an example', CURRENT_TIMESTAMP, NEW."createdBy", 'None');
@@ -257,12 +279,6 @@ DROP TRIGGER IF EXISTS trigger_create_default_board_content ON "Board";
 CREATE TRIGGER trigger_create_default_board_content
 AFTER INSERT ON "Board"
 FOR EACH ROW EXECUTE FUNCTION create_default_board_content();
-
-DO $$ BEGIN
-    ALTER TABLE "Board" ADD CONSTRAINT "fk_board_documentation" FOREIGN KEY ("documentationSectionId") REFERENCES "Documentation"("id") ON DELETE CASCADE;
-EXCEPTION
-    WHEN duplicate_object OR duplicate_table THEN null;
-END $$;
 
 CREATE OR REPLACE FUNCTION get_board_details(p_board_id BIGINT)
 RETURNS json AS $$
@@ -277,11 +293,27 @@ BEGIN
                         SELECT
                             bc.*,
                             COALESCE(
-                                (SELECT json_agg(t.* ORDER BY t."taskIndex") FROM "Task" t WHERE t."boardColumnId" = bc.id),
+                                (
+                                    SELECT json_agg(
+                                        row_to_json(t)::jsonb || jsonb_build_object(
+                                            'assignees', COALESCE((SELECT json_agg(json_build_object('id', ui.id, 'name', ui.name || ' ' || ui.surname)) FROM "assignee" a JOIN "UserInfo" ui ON a."userId" = ui.id WHERE a."cardId" = t.id AND a."cardType" = 'task'), '[]'::json),
+                                            'tags', COALESCE((SELECT json_agg(json_build_object('id', tg.id, 'name', tg.name, 'color', tg.color)) FROM "cardTag" ct JOIN "tags" tg ON ct."tagId" = tg.id WHERE ct."cardId" = t.id AND ct."cardType" = 'task'), '[]'::json),
+                                            'comments', COALESCE((SELECT json_agg(json_build_object('id', c.id, 'text', c.text, 'createdAt', c."createdAt", 'userName', uc.name, 'userId', c."userId")) FROM "Comment" c JOIN "UserInfo" uc ON c."userId" = uc.id WHERE c."cardId" = t.id AND c."cardType" = 'task'), '[]'::json)
+                                        ) ORDER BY t."taskIndex"
+                                    ) FROM "Task" t WHERE t."boardColumnId" = bc.id
+                                ),
                                 '[]'::json
                             ) AS tasks,
                             COALESCE(
-                                (SELECT json_agg(em.* ORDER BY em."eventIndex") FROM "EventMeeting" em WHERE em."boardColumnId" = bc.id),
+                                (
+                                    SELECT json_agg(
+                                        row_to_json(em)::jsonb || jsonb_build_object(
+                                            'assignees', COALESCE((SELECT json_agg(json_build_object('id', ui.id, 'name', ui.name || ' ' || ui.surname)) FROM "assignee" a JOIN "UserInfo" ui ON a."userId" = ui.id WHERE a."cardId" = em.id AND a."cardType" = 'event'), '[]'::json),
+                                            'tags', COALESCE((SELECT json_agg(json_build_object('id', tg.id, 'name', tg.name, 'color', tg.color)) FROM "cardTag" ct JOIN "tags" tg ON ct."tagId" = tg.id WHERE ct."cardId" = em.id AND ct."cardType" = 'event'), '[]'::json),
+                                            'comments', COALESCE((SELECT json_agg(json_build_object('id', c.id, 'text', c.text, 'createdAt', c."createdAt", 'userName', uc.name, 'userId', c."userId")) FROM "Comment" c JOIN "UserInfo" uc ON c."userId" = uc.id WHERE c."cardId" = em.id AND c."cardType" = 'event'), '[]'::json)
+                                        ) ORDER BY em."eventIndex"
+                                    ) FROM "EventMeeting" em WHERE em."boardColumnId" = bc.id
+                                ),
                                 '[]'::json
                             ) AS events
                         FROM "boardColumn" AS bc

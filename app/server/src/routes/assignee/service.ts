@@ -5,6 +5,10 @@ export const assigneeService = {
                 'INSERT INTO "assignee" ("userId", "cardId", "cardType") VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
                 [userId, cardId, cardType]
             );
+            await fastify.pg.query(
+                `INSERT INTO "Notification" ("userId", "message") VALUES ($1, $2)`,
+                [userId, `You have been assigned to a ${cardType} !`]
+            );
             return { success: true };
         } catch (error: any) {
             return { success: false, message: error.message };
