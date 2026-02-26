@@ -11,9 +11,16 @@ services:
     volumes:
       - ./psql-db.sql:/usr/src/app/psql-db.sql
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "const n=require('net');const c=n.createConnection(3001,'127.0.0.1');c.on('connect',()=>{c.end();process.exit(0)});c.on('error',()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   frontend:
     build:
@@ -22,8 +29,10 @@ services:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://backend:3001
+      - API_URL=http://backend:3001
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -37,10 +46,18 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - /var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U epitrello -d epitrello_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgres_data:

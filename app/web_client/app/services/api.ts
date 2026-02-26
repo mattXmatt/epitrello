@@ -1,7 +1,7 @@
 import { Task } from "@/app/components/boards/TaskCard";
 import { Event } from "@/app/components/boards/EventCard";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = typeof window !== 'undefined' ? '/api' : (process.env.NEXT_PUBLIC_API_URL || 'http://backend:3001');
 
 export interface Column {
     id: string;
@@ -94,18 +94,36 @@ export const updateBoardSettings = async (boardId: string, backgroundColor: stri
     return res.json();
 };
 
-export const createColumn = async (boardId: string, columnName: string) => {
-    const res = await fetchWithCredentials(`${API_BASE_URL}/boardColumn`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ boardId, columnName }) });
-    const data = await res.json();
-    return data.result;
+export const createColumn = async (
+  boardId: string,
+  columnName: string,
+  columnIndex: number
+) => {
+  const res = await fetchWithCredentials(`${API_BASE_URL}/boardColumn`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ boardId, columnName, columnIndex }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to create column");
+  }
+
+  const data = await res.json();
+  return data.result;
 };
 
 export const updateColumn = async (columnId: string, updates: Partial<Column>) => {
-    const res = await fetchWithCredentials(`${API_BASE_URL}/boardColumn/${columnId}`, { 
-        method: 'PUT', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(updates) 
+    const res = await fetchWithCredentials(`${API_BASE_URL}/boardColumn/${columnId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
     });
+    return res.json();
+};
+
+export const deleteColumn = async (columnId: string) => {
+    const res = await fetchWithCredentials(`${API_BASE_URL}/boardColumn/${columnId}`, { method: 'DELETE' });
     return res.json();
 };
 
@@ -149,8 +167,8 @@ export const updateEvent = async (eventId: string, updates: Partial<Event>): Pro
 
 export const deleteEvent = async (eventId: string) => fetchWithCredentials(`${API_BASE_URL}/eventMeeting/${eventId}`, { method: 'DELETE' });
 
-export const inviteUser = async (boardId: string, email: string) => {
-    const res = await fetchWithCredentials(`${API_BASE_URL}/boardParticipant/invite`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ boardId, email }) });
+export const inviteUser = async (boardId: string, email: string, role: string = 'member') => {
+    const res = await fetchWithCredentials(`${API_BASE_URL}/boardParticipant/invite`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ boardId, email, role }) });
     return res.json();
 };
 
@@ -158,6 +176,20 @@ export const getParticipants = async (boardId: string) => {
     const res = await fetchWithCredentials(`${API_BASE_URL}/boardParticipant/${boardId}`);
     const data = await res.json();
     return data.result;
+};
+
+export const removeParticipant = async (participantId: string) => {
+    const res = await fetchWithCredentials(`${API_BASE_URL}/boardParticipant/${participantId}`, { method: 'DELETE' });
+    return res.json();
+};
+
+export const updateParticipantRole = async (participantId: string, role: string) => {
+    const res = await fetchWithCredentials(`${API_BASE_URL}/boardParticipant/${participantId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+    });
+    return res.json();
 };
 
 export const assignUser = async (cardId: string, userId: string, cardType: 'task' | 'event') => {
@@ -176,10 +208,10 @@ export const updateEventPresence = async (eventId: string, userId: string, statu
 };
 
 export const createTag = async (boardId: string, name: string, color: string) => {
-    const res = await fetchWithCredentials(`${API_BASE_URL}/tags`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ boardId, name, color }) 
+    const res = await fetchWithCredentials(`${API_BASE_URL}/tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ boardId, name, color })
     });
     return res.json();
 };
@@ -191,28 +223,28 @@ export const getBoardTags = async (boardId: string) => {
 };
 
 export const assignTag = async (cardId: string, tagId: string, type: 'task' | 'event') => {
-    const res = await fetchWithCredentials(`${API_BASE_URL}/tags/assign`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ cardId, tagId, type }) 
+    const res = await fetchWithCredentials(`${API_BASE_URL}/tags/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId, tagId, type })
     });
     return res.json();
 };
 
 export const unassignTag = async (cardId: string, tagId: string, type: 'task' | 'event') => {
-    const res = await fetchWithCredentials(`${API_BASE_URL}/tags/assign`, { 
-        method: 'DELETE', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ cardId, tagId, type }) 
+    const res = await fetchWithCredentials(`${API_BASE_URL}/tags/assign`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId, tagId, type })
     });
     return res.json();
 };
 
 export const addComment = async (cardId: string, cardType: 'task' | 'event', text: string) => {
-    const res = await fetchWithCredentials(`${API_BASE_URL}/comments`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ cardId, cardType, text }) 
+    const res = await fetchWithCredentials(`${API_BASE_URL}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId, cardType, text })
     });
     return res.json();
 };
@@ -229,8 +261,6 @@ export const getNotifications = async () => {
 };
 
 export const markNotificationAsRead = async (notificationId: string) => {
-    const res = await fetchWithCredentials(`${API_BASE_URL}/notifications/${notificationId}/read`, {
-        method: 'PUT'
-    });
+    const res = await fetchWithCredentials(`${API_BASE_URL}/notifications/${notificationId}/read`, { method: 'PUT' });
     return res.json();
 };

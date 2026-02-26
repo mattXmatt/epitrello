@@ -17,6 +17,10 @@ server.register(cookie, {
   parseOptions: {}
 });
 
+server.get('/health', async (request, reply) => {
+    return reply.code(200).send({ status: 'ok' });
+});
+
 server.register(app);
 
 const start = async () => {

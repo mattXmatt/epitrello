@@ -1,56 +1,123 @@
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 30px;
-    height: 70px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e0e0e0;
-    font-family: sans-serif;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 28px;
+  height: 64px;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
 }
 
-.header-left {
-    display: flex;
-    align-items: center;
-}
+.header-left { display: flex; align-items: center; gap: 28px; }
 
 .logo {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #333;
-    text-decoration: none;
-    margin-right: 40px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.nav {
-    display: flex;
-    gap: 25px;
+.logo::before {
+  content: '▪';
+  font-size: 1.4rem;
+  line-height: 1;
 }
+
+.nav { display: flex; gap: 2px; }
 
 .nav-link {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #555;
-    text-decoration: none;
-    padding: 5px 0;
-    border-bottom: 2px solid transparent;
-    transition: all 0.3s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+  border-bottom: none !important;
 }
 
-.nav-link:hover,
-.nav-link.active { /* You would need to add logic to apply 'active' class */
-    color: #913E3E;
-    border-bottom-color: #913E3E;
+.nav-link:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-primary-light);
 }
 
-.header-right {
-    display: flex;
-    align-items: center;
+.header-right { display: flex; align-items: center; }
+
+.user-profile { font-size: 0.875rem; font-weight: 500; cursor: pointer; }
+
+.profile-dropdown { position: relative; }
+
+.profile-dropdown > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background-color: var(--color-primary-light);
+  border-radius: 20px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
 }
 
-.user-profile {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #333;
-    cursor: pointer;
+.profile-dropdown > span:hover { background-color: #C5CAE9; }
+
+.dropdown-content {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 160px;
+  padding: 6px;
+  z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: var(--transition);
+}
+
+.profile-dropdown:hover .dropdown-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-content button {
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-danger);
+  transition: var(--transition);
+}
+
+.dropdown-content button:hover { background-color: #FFF5F5; }
+
+.nav-link.login-btn {
+  background-color: var(--color-accent);
+  color: #fff;
+  padding: 7px 16px;
+  border-radius: 20px;
+}
+
+.nav-link.login-btn:hover {
+  background-color: #7a3333;
+  color: #fff;
 }

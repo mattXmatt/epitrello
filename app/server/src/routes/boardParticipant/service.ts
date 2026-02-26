@@ -4,15 +4,12 @@ export const boardParticipantService = {
         try {
             const userRes = await client.query('SELECT id FROM "UserInfo" WHERE email = $1', [email]);
             if (userRes.rowCount === 0) return { success: false, message: "User not found" };
-            
             const userId = userRes.rows[0].id;
-
             const existing = await client.query(
                 'SELECT * FROM "BoardParticipant" WHERE "boardId" = $1 AND "participantUserId" = $2',
                 [boardId, userId]
             );
             if (existing.rowCount > 0) return { success: false, message: "User already in board" };
-
             const newPart = await client.query(
                 'INSERT INTO "BoardParticipant" ("boardId", "participantUserId", "role") VALUES ($1, $2, $3) RETURNING *',
                 [boardId, userId, role]
@@ -37,6 +34,38 @@ export const boardParticipantService = {
             return { success: true, result: parts.rows };
         } catch (error: any) {
             return { success: false, message: error.message };
+        }
+    },
+
+    async removeParticipant(fastify: any, participantId: number) {
+        const client = await fastify.pg.connect();
+        try {
+            const result = await client.query(
+                'DELETE FROM "BoardParticipant" WHERE id = $1 RETURNING *',
+                [participantId]
+            );
+            if (result.rowCount === 0) return { success: false, message: 'Participant introuvable' };
+            return { success: true };
+        } catch (error: any) {
+            return { success: false, message: error.message };
+        } finally {
+            client.release();
+        }
+    },
+
+    async updateParticipantRole(fastify: any, participantId: number, role: string) {
+        const client = await fastify.pg.connect();
+        try {
+            const result = await client.query(
+                'UPDATE "BoardParticipant" SET role = $1 WHERE id = $2 RETURNING *',
+                [role, participantId]
+            );
+            if (result.rowCount === 0) return { success: false, message: 'Participant introuvable' };
+            return { success: true, result: result.rows[0] };
+        } catch (error: any) {
+            return { success: false, message: error.message };
+        } finally {
+            client.release();
         }
     }
 };

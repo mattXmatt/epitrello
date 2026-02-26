@@ -1,0 +1,71 @@
+.doc-dropzone {
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 40px 24px;
+    text-align: center;
+    background: var(--color-surface);
+    transition: var(--transition);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-text-muted);
+    margin-bottom: 28px;
+}
+.doc-dropzone:hover, .doc-dropzone.dragging {
+    border-color: var(--color-accent);
+    background: #fdf5f5;
+    color: var(--color-accent);
+}
+.doc-dropzone p { font-size: 0.875rem; font-weight: 500; }
+
+.doc-section { }
+.section-title { font-size: 1rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: 12px; }
+
+.doc-empty {
+    text-align: center;
+    padding: 40px;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.files-list {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.file-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+    transition: var(--transition);
+}
+.file-row:last-child { border-bottom: none; }
+.file-row:hover { background: var(--color-bg); }
+
+.file-icon { color: var(--color-text-muted); flex-shrink: 0; }
+.file-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.file-name { font-size: 0.875rem; font-weight: 500; color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-meta { font-size: 0.75rem; color: var(--color-text-muted); }
+
+.btn-icon {
+    display: flex; align-items: center; justify-content: center;
+    padding: 6px; border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    cursor: pointer; transition: var(--transition); flex-shrink: 0;
+    text-decoration: none;
+}
+.btn-icon:hover { background: var(--color-bg); color: var(--color-text-primary); }
+
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; color: var(--color-text-muted); }
+.breadcrumb-link { color: var(--color-text-secondary); font-weight: 500; transition: var(--transition); }
+.breadcrumb-link:hover { color: var(--color-accent); }
+.breadcrumb-sep { color: var(--color-border); }

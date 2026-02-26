@@ -12,10 +12,9 @@ const Header = () => {
             <div className="header-left">
                 <Link href="/" className="logo">EpiTrello</Link>
                 <nav className="nav">
-                    {isAuthenticated && <Link href="/my-boards" className="nav-link">My Boards</Link>}
-                    <Link href="/boards" className="nav-link">All Boards</Link>
+                    {isAuthenticated && <Link href="/my-boards" className="nav-link">Mes boards</Link>}
+                    <Link href="/boards" className="nav-link">Tous les boards</Link>
                     <Link href="/documentation" className="nav-link">Documentation</Link>
-                    <Link href="/create-board" className="nav-link">Create Board</Link>
                 </nav>
             </div>
             <div className="header-right">
@@ -24,11 +23,11 @@ const Header = () => {
                         <div className="profile-dropdown">
                             <span>{user.username}</span>
                             <div className="dropdown-content">
-                                <button onClick={logout}>Logout</button>
+                                <button onClick={logout}>Se déconnecter</button>
                             </div>
                         </div>
                     ) : (
-                        <Link href="/auth" className="nav-link">Login / Register</Link>
+                        <Link href="/auth" className="nav-link login-btn">Connexion</Link>
                     )}
                 </div>
             </div>
@@ -37,5 +36,3 @@ const Header = () => {
 };
 
 export default Header;
-
-
